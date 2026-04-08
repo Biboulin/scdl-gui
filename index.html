@@ -529,9 +529,6 @@ let pollTimer    = null;
 let logOffset    = 0;
 const POLL_MS    = 800;
 
-// Progression parsée depuis les logs scdl
-const prog = { total: 0, done: 0, failed: 0 };
-
 function setStatus(s) {
   const el = $("status-label");
   el.className = "status-pill " + s;
@@ -544,73 +541,41 @@ function setStatus(s) {
   };
   el.textContent = labels[s] || s;
 
-  // Couleur de la barre selon statut final
   const fill = $("progress-bar-fill");
-  if (s === "done")      { fill.className = "done"; fill.style.width = "100%"; }
+  if (s === "done")                          { fill.className = "done"; fill.style.width = "100%"; }
   else if (s === "error" || s === "cancelled") fill.className = "error";
 }
 
-// ── Parsing des logs scdl ────────────────────────────────────────────────
-function parseLine(line) {
-  // Nombre total de tracks dans une playlist
-  // ex : "Downloading 23 tracks" ou "Found 23 tracks"
-  const totalMatch = line.match(/(\d+)\s+tracks?/i);
-  if (totalMatch && !prog.total) {
-    prog.total = parseInt(totalMatch[1], 10);
-  }
-
-  // Track téléchargée avec succès  → "[✔] Nom du son"
-  if (/^\[✔\]/.test(line)) {
-    prog.done++;
-    const name = line.replace(/^\[✔\]\s*/, "").replace(/\.mp3$/i, "").trim();
-    if (name) setCurrentTrack("✔ " + name, false);
-  }
-
-  // Track échouée → "[✘] Nom du son"
-  if (/^\[✘\]/.test(line)) {
-    prog.failed++;
-    prog.done++; // on compte quand même pour la progression
-  }
-
-  // Track en cours de téléchargement → lignes avec "Downloading : Nom"
-  const dlMatch = line.match(/downloading\s*[:\-]\s*(.+)/i);
-  if (dlMatch) {
-    const name = dlMatch[1].replace(/\.mp3$/i, "").trim();
-    setCurrentTrack("⬇ " + name, true);
-  }
-
-  updateProgressBar();
-}
-
-function setCurrentTrack(text, active) {
-  const el = $("current-track");
-  el.textContent = text;
-  el.className = active ? "" : "muted";
-}
-
-function updateProgressBar() {
+function updateProgress(p) {
+  if (!p) return;
   const fill    = $("progress-bar-fill");
   const counter = $("progress-counter");
+  const track   = $("current-track");
 
-  if (!prog.total) {
-    fill.style.width = "0%";
-    counter.textContent = prog.done > 0 ? `${prog.done}` : "—";
-    return;
+  // Barre + compteur
+  if (p.total > 0) {
+    const pct = Math.min(100, Math.round((p.index / p.total) * 100));
+    fill.style.width        = pct + "%";
+    counter.textContent     = `${p.index} / ${p.total}`;
+  } else {
+    fill.style.width    = p.done > 0 ? "30%" : "0%";   // indéterminé
+    counter.textContent = p.done > 0 ? String(p.done) : "—";
   }
 
-  const pct = Math.round((prog.done / prog.total) * 100);
-  fill.style.width = pct + "%";
-  counter.textContent = `${prog.done} / ${prog.total}`;
+  // Nom du track en cours
+  if (p.current) {
+    track.textContent = "⬇ " + p.current;
+    track.className   = "";
+  }
 }
 
 function appendLogs(lines) {
   const box = $("log-box");
   for (const line of lines) {
-    parseLine(line);
     const s = document.createElement("span");
-    if (/^\[✔\]/.test(line))                   s.className = "l-ok";
-    else if (/^\[✘\]|error/i.test(line))        s.className = "l-err";
-    else if (/^[▶📁📦⛔⚠✅❌]/.test(line))      s.className = "l-info";
+    if (/^\[✔\]/.test(line))              s.className = "l-ok";
+    else if (/^\[✘\]|error/i.test(line)) s.className = "l-err";
+    else if (/^[▶📁📦⛔⚠✅❌]/.test(line)) s.className = "l-info";
     s.textContent = line + "\n";
     box.appendChild(s);
   }
@@ -619,11 +584,11 @@ function appendLogs(lines) {
 
 function resetLog() {
   $("log-box").innerHTML = "";
-  prog.total = 0; prog.done = 0; prog.failed = 0;
   $("progress-bar-fill").style.width = "0%";
   $("progress-bar-fill").className   = "";
   $("progress-counter").textContent  = "—";
-  setCurrentTrack("Démarrage…", false);
+  $("current-track").textContent     = "Démarrage…";
+  $("current-track").className       = "muted";
 }
 
 // ── Toggle console ───────────────────────────────────────────────────────
@@ -677,6 +642,7 @@ async function poll() {
     const d = await API(`/api/status/${currentJobId}?since=${logOffset}`);
 
     if (d.logs?.length) { appendLogs(d.logs); logOffset += d.logs.length; }
+    updateProgress(d.progress);
     setStatus(d.status);
 
     if (d.status === "running" || d.status === "pending") {

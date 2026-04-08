@@ -6,6 +6,7 @@ Protégé par mot de passe (APP_PASSWORD dans .env / variables d'env Docker).
 """
 
 import os
+import re
 import subprocess
 import threading
 import uuid
@@ -118,10 +119,43 @@ threading.Thread(target=cleanup_old_jobs, daemon=True).start()
 
 
 # ── Téléchargement ─────────────────────────────────────────────────────────
+def parse_progress(line: str, job: dict):
+    """Met à jour job['progress'] en parsant une ligne de sortie yt-dlp/scdl."""
+    p = job["progress"]
+
+    # "[download] Downloading item 3 of 23"  →  done=2, total=23
+    m = re.search(r"\[download\] Downloading item (\d+) of (\d+)", line)
+    if m:
+        p["index"] = int(m.group(1))   # item en cours (1-based)
+        p["total"] = int(m.group(2))
+        p["done"]  = p["index"] - 1    # nombre de terminés avant celui-ci
+        return
+
+    # "[SoundCloud] Playlist name: Downloading 23 items"
+    m = re.search(r"Downloading (\d+) items?", line, re.I)
+    if m and not p["total"]:
+        p["total"] = int(m.group(1))
+        return
+
+    # "[download] Destination: /tmp/.../Artist - Title.mp3"
+    m = re.search(r"\[download\] Destination:\s*(.+)", line)
+    if m:
+        fname = os.path.basename(m.group(1).strip())
+        # Retire l'extension pour un affichage propre
+        p["current"] = re.sub(r"\.(mp3|opus|m4a|flac|wav)$", "", fname, flags=re.I)
+        return
+
+    # Fallback : ligne de complétion yt-dlp "100% of X.XXMiB"
+    if "100%" in line and "of" in line and not re.search(r"Downloading item", line):
+        if p["index"]:
+            p["done"] = p["index"]
+
+
 def run_download(job_id: str, url: str):
     """Lance scdl dans un thread, puis zippe le résultat."""
     job = jobs[job_id]
     job["status"] = "running"
+    job["progress"] = {"total": 0, "done": 0, "index": 0, "current": ""}
 
     scdl_path = find_scdl()
     if not scdl_path:
@@ -140,10 +174,10 @@ def run_download(job_id: str, url: str):
         "--path", tmpdir,
         "--onlymp3",
         "--addtofile",
-        "--no-playlist-folder",   # pas de sous-dossier
+        "--no-playlist-folder",
     ]
 
-    job["logs"].append(f"▶ Démarrage du téléchargement…")
+    job["logs"].append("▶ Démarrage du téléchargement…")
     job["logs"].append(f"🔗 URL : {url}")
 
     try:
@@ -159,6 +193,7 @@ def run_download(job_id: str, url: str):
         for line in iter(process.stdout.readline, ""):
             line = line.rstrip()
             if line:
+                parse_progress(line, job)
                 job["logs"].append(line)
 
         process.wait()
@@ -229,6 +264,7 @@ def start_download():
         "url": url,
         "status": "pending",
         "logs": [],
+        "progress": {"total": 0, "done": 0, "index": 0, "current": ""},
         "created_at": time.time(),
     }
 
@@ -253,6 +289,7 @@ def get_status(job_id: str):
         "total_logs": len(job["logs"]),
         "file_count": job.get("file_count"),
         "has_zip": bool(job.get("zip_path") and os.path.exists(job.get("zip_path", ""))),
+        "progress": job.get("progress", {"total": 0, "done": 0, "index": 0, "current": ""}),
     })
 
 
