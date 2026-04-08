@@ -8,21 +8,25 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --orange:       #ff5500;
-      --orange-dark:  #cc4400;
-      --orange-dim:   rgba(255,85,0,0.12);
-      --bg:           #0f0f0f;
-      --surface:      #1a1a1a;
-      --surface2:     #242424;
-      --border:       #2e2e2e;
-      --text:         #f0f0f0;
-      --muted:        #777;
-      --green:        #22c55e;
-      --green-dim:    rgba(34,197,94,0.12);
-      --red:          #ef4444;
-      --red-dim:      rgba(239,68,68,0.12);
-      --yellow:       #f59e0b;
-      --yellow-dim:   rgba(245,158,11,0.12);
+      --orange:      #ff5500;
+      --orange-d:    #cc4000;
+      --orange-dim:  rgba(255,85,0,0.14);
+      --orange-glow: rgba(255,85,0,0.25);
+      --bg:          #080808;
+      --surface:     #111111;
+      --surface2:    #1a1a1a;
+      --surface3:    #222222;
+      --border:      rgba(255,255,255,0.08);
+      --border-h:    rgba(255,255,255,0.14);
+      --text:        #f2f2f2;
+      --muted:       #666;
+      --muted2:      #444;
+      --green:       #22c55e;
+      --green-dim:   rgba(34,197,94,0.13);
+      --red:         #ef4444;
+      --red-dim:     rgba(239,68,68,0.13);
+      --yellow:      #f59e0b;
+      --yellow-dim:  rgba(245,158,11,0.13);
     }
 
     body {
@@ -33,314 +37,424 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 2.5rem 1rem 3rem;
+      padding: 2.5rem 1rem 4rem;
+      /* Subtle grid background */
+      background-image:
+        radial-gradient(ellipse 80% 40% at 50% -10%, rgba(255,85,0,0.07) 0%, transparent 70%),
+        linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+      background-size: 100% 100%, 40px 40px, 40px 40px;
     }
 
-    /* ────── Login Screen ────── */
+    /* ══ LOGIN ══════════════════════════════════════════════════════════════ */
     #login-screen {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      flex: 1;
-      width: 100%;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      flex: 1; width: 100%; min-height: 80vh;
     }
 
     .login-box {
-      width: 100%;
-      max-width: 380px;
+      width: 100%; max-width: 360px;
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 2rem 2rem 1.75rem;
+      border-radius: 20px;
+      padding: 2.25rem 2rem 2rem;
       text-align: center;
+      box-shadow: 0 0 60px rgba(255,85,0,0.06), 0 20px 60px rgba(0,0,0,0.5);
     }
 
-    .login-icon {
-      width: 52px; height: 52px;
-      background: var(--orange);
-      border-radius: 50%;
+    .login-logo {
+      width: 56px; height: 56px;
+      background: linear-gradient(135deg, #ff5500, #ff8844);
+      border-radius: 16px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 1.5rem;
-      margin: 0 auto 1rem;
+      font-size: 1.6rem;
+      margin: 0 auto 1.25rem;
+      box-shadow: 0 8px 24px rgba(255,85,0,0.35);
     }
 
-    .login-box h2 { font-size: 1.25rem; margin-bottom: 0.3rem; }
-    .login-box p  { color: var(--muted); font-size: 0.85rem; margin-bottom: 1.5rem; }
+    .login-box h2 { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.3rem; }
+    .login-box p  { color: var(--muted); font-size: 0.85rem; margin-bottom: 1.75rem; }
 
     .login-box input[type="password"] {
-      width: 100%;
-      padding: 0.7rem 1rem;
+      width: 100%; padding: 0.75rem 1rem;
       background: var(--surface2);
       border: 1px solid var(--border);
-      border-radius: 9px;
-      color: var(--text);
-      font-size: 1rem;
-      outline: none;
-      text-align: center;
-      letter-spacing: 0.1em;
-      margin-bottom: 0.75rem;
-      transition: border-color 0.15s;
+      border-radius: 10px;
+      color: var(--text); font-size: 1rem;
+      outline: none; text-align: center;
+      letter-spacing: 0.12em; margin-bottom: 0.65rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
-    .login-box input[type="password"]:focus { border-color: var(--orange); }
+    .login-box input[type="password"]:focus {
+      border-color: var(--orange);
+      box-shadow: 0 0 0 3px var(--orange-dim);
+    }
 
     #login-error {
-      color: var(--red);
-      font-size: 0.82rem;
-      min-height: 1.1em;
-      margin-bottom: 0.5rem;
+      color: var(--red); font-size: 0.82rem; min-height: 1.1em; margin-bottom: 0.5rem;
     }
 
-    /* ────── Main App ────── */
-    #app-screen { display: none; width: 100%; max-width: 680px; }
+    /* ══ APP ════════════════════════════════════════════════════════════════ */
+    #app-screen { display: none; width: 100%; max-width: 660px; }
 
     /* ── Header ── */
     header {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-bottom: 2rem;
+      display: flex; flex-direction: column; align-items: center;
+      margin-bottom: 2.25rem; text-align: center;
     }
 
-    .logo { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 0.35rem; }
-    .logo-icon {
-      width: 40px; height: 40px;
-      background: var(--orange); border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.2rem;
+    .logo-wrap {
+      position: relative;
+      width: 52px; height: 52px; margin-bottom: 1rem;
     }
-    header h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.4px; }
-    header .sub { color: var(--muted); font-size: 0.85rem; }
+
+    .logo-icon {
+      width: 52px; height: 52px;
+      background: linear-gradient(135deg, #ff5500, #ff8844);
+      border-radius: 15px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+      box-shadow: 0 8px 24px rgba(255,85,0,0.3);
+      position: relative; z-index: 1;
+    }
+
+    /* Anneau animé pendant le téléchargement */
+    .logo-ring {
+      position: absolute; inset: -6px;
+      border-radius: 20px;
+      border: 2px solid transparent;
+      background: linear-gradient(var(--bg), var(--bg)) padding-box,
+                  linear-gradient(135deg, #ff5500, transparent, #ff5500) border-box;
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+    body.downloading .logo-ring {
+      opacity: 1;
+      animation: spin-ring 2s linear infinite;
+    }
+    @keyframes spin-ring { to { transform: rotate(360deg); } }
+
+    header h1 {
+      font-size: 1.55rem; font-weight: 800; letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #fff 40%, #ff8844);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    header .sub { color: var(--muted); font-size: 0.83rem; margin-top: 0.2rem; }
 
     #scdl-badge {
       display: inline-flex; align-items: center; gap: 0.4rem;
-      margin-top: 0.6rem;
-      padding: 0.25rem 0.8rem;
-      border-radius: 999px; font-size: 0.78rem; font-weight: 500;
-      background: var(--surface2); border: 1px solid var(--border);
-      color: var(--muted);
+      margin-top: 0.75rem; padding: 0.28rem 0.85rem;
+      border-radius: 999px; font-size: 0.77rem; font-weight: 500;
+      background: var(--surface2); border: 1px solid var(--border); color: var(--muted);
+      transition: all 0.3s;
     }
-    #scdl-badge.ok   { border-color: var(--green); color: var(--green); }
-    #scdl-badge.warn { border-color: var(--yellow); color: var(--yellow); }
+    #scdl-badge.ok   { border-color: rgba(34,197,94,0.4); color: var(--green); }
+    #scdl-badge.warn { border-color: rgba(245,158,11,0.4); color: var(--yellow); }
     #scdl-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
-    /* ── Card ── */
+    /* ── Card générique ── */
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 14px;
+      border-radius: 18px;
       padding: 1.6rem;
-      margin-bottom: 1rem;
+      margin-bottom: 0.9rem;
+      transition: border-color 0.2s;
     }
+    .card:hover { border-color: var(--border-h); }
 
     .card-label {
-      font-size: 0.72rem; font-weight: 600;
-      text-transform: uppercase; letter-spacing: 0.08em;
+      font-size: 0.7rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.1em;
       color: var(--muted); margin-bottom: 1rem;
     }
 
     /* ── Tabs ── */
-    .tabs { display: flex; gap: 0.45rem; margin-bottom: 1.1rem; }
-    .tab {
-      padding: 0.4rem 1rem;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--muted); font-size: 0.84rem;
-      cursor: pointer; transition: all 0.15s;
+    .tabs {
+      display: flex; gap: 0.4rem;
+      background: var(--surface2);
+      border-radius: 10px; padding: 0.25rem;
+      margin-bottom: 1.1rem;
     }
-    .tab.active { background: var(--orange); border-color: var(--orange); color: #fff; font-weight: 600; }
-    .tab:hover:not(.active) { border-color: var(--orange); color: var(--text); }
+    .tab {
+      flex: 1; padding: 0.45rem 0;
+      border-radius: 7px; border: none;
+      background: transparent; color: var(--muted);
+      font-size: 0.84rem; cursor: pointer; transition: all 0.18s;
+      font-weight: 500;
+    }
+    .tab.active { background: var(--surface3); color: var(--text); font-weight: 600; box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
 
     /* ── Input ── */
     .field { margin-bottom: 1rem; }
-    label { display: block; font-size: 0.82rem; color: var(--muted); margin-bottom: 0.35rem; }
+    label { display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.38rem; font-weight: 500; }
 
     input[type="text"] {
-      width: 100%;
-      padding: 0.65rem 0.9rem;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 9px;
-      color: var(--text); font-size: 0.95rem;
-      outline: none; transition: border-color 0.15s;
+      width: 100%; padding: 0.7rem 1rem;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text); font-size: 0.94rem;
+      outline: none; transition: border-color 0.2s, box-shadow 0.2s;
     }
-    input[type="text"]::placeholder { color: var(--muted); }
-    input[type="text"]:focus { border-color: var(--orange); }
+    input[type="text"]::placeholder { color: var(--muted2); }
+    input[type="text"]:focus {
+      border-color: var(--orange);
+      box-shadow: 0 0 0 3px var(--orange-dim);
+    }
 
-    /* ── Bouton principal ── */
+    /* ── Boutons ── */
     .btn-primary {
-      width: 100%;
-      padding: 0.75rem;
-      background: var(--orange);
-      border: none; border-radius: 10px;
-      color: #fff; font-size: 0.97rem; font-weight: 600;
-      cursor: pointer; transition: background 0.15s, transform 0.1s;
+      width: 100%; padding: 0.78rem;
+      background: linear-gradient(135deg, #ff5500, #ff7722);
+      border: none; border-radius: 11px;
+      color: #fff; font-size: 0.96rem; font-weight: 700;
+      cursor: pointer; transition: opacity 0.15s, transform 0.1s, box-shadow 0.2s;
+      box-shadow: 0 4px 20px rgba(255,85,0,0.3);
+      letter-spacing: 0.01em;
     }
-    .btn-primary:hover:not(:disabled) { background: var(--orange-dark); }
+    .btn-primary:hover:not(:disabled) {
+      opacity: 0.92; box-shadow: 0 6px 28px rgba(255,85,0,0.4);
+    }
     .btn-primary:active:not(:disabled) { transform: scale(0.99); }
-    .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
 
-    /* ── Progress card ── */
-    #progress-card { display: none; }
+    /* ══ CARTE DE PROGRESSION ═══════════════════════════════════════════════ */
+    #progress-card { display: none; overflow: hidden; }
 
-    .progress-top {
-      display: flex; justify-content: space-between; align-items: center;
+    /* Artwork en fond flou */
+    .artwork-bg {
+      position: absolute; inset: 0;
+      background-size: cover; background-position: center;
+      filter: blur(40px) brightness(0.2) saturate(1.4);
+      opacity: 0;
+      transition: opacity 0.6s;
+      pointer-events: none;
+      border-radius: 18px;
+    }
+    #progress-card { position: relative; }
+    #progress-card.has-art .artwork-bg { opacity: 1; }
+
+    /* Contenu au-dessus du fond */
+    .progress-content { position: relative; z-index: 1; }
+
+    /* Header de la carte */
+    .prog-header {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      margin-bottom: 1.2rem;
+    }
+
+    /* Bloc artwork + meta */
+    .meta-row {
+      display: flex; gap: 1rem; align-items: center;
       margin-bottom: 1.1rem;
     }
 
-    .status-pill {
-      padding: 0.22rem 0.7rem;
-      border-radius: 999px; font-size: 0.75rem; font-weight: 600;
+    .artwork-thumb {
+      width: 56px; height: 56px;
+      border-radius: 10px; object-fit: cover;
+      background: var(--surface2);
+      flex-shrink: 0;
+      border: 1px solid var(--border);
+      display: none;
     }
-    .status-pill.pending   { background: var(--surface2); color: var(--muted); }
-    .status-pill.running   { background: var(--yellow-dim); color: var(--yellow); }
-    .status-pill.done      { background: var(--green-dim);  color: var(--green); }
-    .status-pill.error     { background: var(--red-dim);    color: var(--red); }
-    .status-pill.cancelled { background: var(--surface2);   color: var(--muted); }
+    .artwork-thumb.visible { display: block; }
 
-    #cancel-btn {
-      padding: 0.22rem 0.7rem;
-      border-radius: 7px; border: 1px solid var(--border);
-      background: transparent; color: var(--muted);
-      font-size: 0.78rem; cursor: pointer; transition: all 0.15s;
+    .meta-text { min-width: 0; }
+    .meta-title {
+      font-size: 0.95rem; font-weight: 700;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-bottom: 0.15rem;
     }
-    #cancel-btn:hover { border-color: var(--red); color: var(--red); }
+    .meta-author { font-size: 0.78rem; color: var(--muted); }
 
-    /* ── Track en cours ── */
+    /* Track en cours */
     #current-track {
-      font-size: 0.92rem; font-weight: 500;
+      font-size: 0.87rem; font-weight: 500;
       color: var(--text);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      margin-bottom: 0.75rem;
-      min-height: 1.3em;
+      margin-bottom: 0.7rem; min-height: 1.25em;
     }
     #current-track.muted { color: var(--muted); font-weight: 400; }
 
-    /* ── Barre de progression ── */
-    .progress-bar-wrap {
+    /* Barre de progression */
+    .prog-bar-row {
       display: flex; align-items: center; gap: 0.75rem;
-      margin-bottom: 1.1rem;
+      margin-bottom: 1rem;
     }
-
-    .progress-bar-track {
-      flex: 1;
-      height: 6px;
-      background: var(--surface2);
-      border-radius: 999px;
-      overflow: hidden;
+    .prog-bar-track {
+      flex: 1; height: 5px;
+      background: var(--surface3);
+      border-radius: 999px; overflow: hidden;
     }
-
     #progress-bar-fill {
       height: 100%; width: 0%;
-      background: var(--orange);
+      background: linear-gradient(90deg, #ff5500, #ff8844);
       border-radius: 999px;
-      transition: width 0.4s ease;
+      transition: width 0.5s ease;
+      position: relative;
     }
-    #progress-bar-fill.done { background: var(--green); }
-    #progress-bar-fill.error { background: var(--red); }
+    /* Shimmer animé */
+    #progress-bar-fill::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+      animation: shimmer 1.6s ease-in-out infinite;
+      border-radius: 999px;
+    }
+    @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+    #progress-bar-fill.done    { background: var(--green); }
+    #progress-bar-fill.done::after, #progress-bar-fill.error::after { display: none; }
+    #progress-bar-fill.error   { background: var(--red); }
 
     #progress-counter {
-      font-size: 0.78rem; font-weight: 600;
-      color: var(--muted); white-space: nowrap; min-width: 3.5rem; text-align: right;
+      font-size: 0.76rem; font-weight: 700; color: var(--muted);
+      white-space: nowrap; min-width: 3.2rem; text-align: right;
+      font-variant-numeric: tabular-nums;
     }
 
-    /* ── Console toggle ── */
-    #console-toggle {
-      display: flex; align-items: center; gap: 0.4rem;
-      background: transparent; border: none;
-      color: var(--muted); font-size: 0.78rem;
-      cursor: pointer; padding: 0; margin-bottom: 0.6rem;
-      transition: color 0.15s;
-    }
-    #console-toggle:hover { color: var(--text); }
-    #console-toggle .arrow {
-      display: inline-block; transition: transform 0.2s;
-      font-style: normal; font-size: 0.7rem;
-    }
-    #console-toggle.open .arrow { transform: rotate(90deg); }
+    /* Pills */
+    .pills-row { display: flex; justify-content: space-between; align-items: center; }
 
-    /* ── Log box ── */
-    #log-wrap { display: none; }
+    .status-pill {
+      padding: 0.2rem 0.65rem; border-radius: 999px;
+      font-size: 0.73rem; font-weight: 700;
+    }
+    .status-pill.pending   { background: var(--surface3); color: var(--muted); }
+    .status-pill.running   { background: var(--yellow-dim); color: var(--yellow); }
+    .status-pill.done      { background: var(--green-dim);  color: var(--green); }
+    .status-pill.error     { background: var(--red-dim);    color: var(--red); }
+    .status-pill.cancelled { background: var(--surface3);   color: var(--muted); }
+
+    #cancel-btn {
+      padding: 0.2rem 0.65rem; border-radius: 7px;
+      border: 1px solid var(--border); background: transparent;
+      color: var(--muted); font-size: 0.76rem; cursor: pointer; transition: all 0.15s;
+    }
+    #cancel-btn:hover { border-color: var(--red); color: var(--red); }
+
+    /* ── Divider ── */
+    .divider {
+      height: 1px; background: var(--border); margin: 1rem 0;
+    }
+
+    /* ── Toggles (tracks + console) ── */
+    .toggle-btn {
+      display: flex; align-items: center; gap: 0.45rem;
+      background: transparent; border: none; color: var(--muted);
+      font-size: 0.79rem; cursor: pointer; padding: 0;
+      transition: color 0.15s; width: 100%; text-align: left;
+    }
+    .toggle-btn:hover { color: var(--text); }
+    .toggle-btn .arrow { font-size: 0.65rem; transition: transform 0.22s; }
+    .toggle-btn.open .arrow { transform: rotate(90deg); }
+    .toggle-btn .badge {
+      margin-left: auto;
+      background: var(--surface3); color: var(--muted);
+      font-size: 0.7rem; font-weight: 700; padding: 0.1rem 0.5rem;
+      border-radius: 999px;
+    }
+
+    /* ── Liste de tracks ── */
+    #tracks-wrap { display: none; margin-top: 0.75rem; }
+
+    .track-list { list-style: none; }
+    .track-item {
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0.45rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.83rem; animation: fadeSlide 0.25s ease;
+    }
+    .track-item:last-child { border-bottom: none; }
+
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(-4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .track-icon { font-size: 0.75rem; width: 1.2rem; text-align: center; flex-shrink: 0; }
+    .track-name {
+      flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      color: var(--text);
+    }
+    .track-item.downloading .track-name { color: var(--muted); }
+    .track-item.done .track-name        { color: var(--text); }
+    .track-item.error .track-name       { color: var(--red); text-decoration: line-through; }
+
+    /* ── Console ── */
+    #console-wrap { display: none; margin-top: 0.75rem; }
 
     #log-box {
-      background: #0a0a0a;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 0.8rem 1rem;
+      background: #050505; border: 1px solid var(--border);
+      border-radius: 9px; padding: 0.75rem 0.9rem;
       font-family: "SF Mono", "Fira Mono", ui-monospace, monospace;
-      font-size: 0.77rem; line-height: 1.65;
-      max-height: 260px; overflow-y: auto;
-      color: #bbb; white-space: pre-wrap; word-break: break-all;
+      font-size: 0.74rem; line-height: 1.7;
+      max-height: 220px; overflow-y: auto;
+      color: #999; white-space: pre-wrap; word-break: break-all;
     }
     #log-box .l-ok   { color: var(--green); }
     #log-box .l-err  { color: var(--red); }
     #log-box .l-info { color: #ff7733; }
 
-    /* ── Bouton ZIP ── */
+    /* ── ZIP button ── */
     #zip-btn {
-      display: none;
-      width: 100%;
-      margin-top: 1rem;
-      padding: 0.8rem;
-      background: var(--green-dim);
-      border: 1px solid var(--green);
-      border-radius: 10px;
-      color: var(--green); font-size: 0.97rem; font-weight: 600;
-      cursor: pointer; transition: background 0.15s;
+      display: none; width: 100%; margin-top: 1.1rem;
+      padding: 0.82rem;
+      background: linear-gradient(135deg, rgba(34,197,94,0.15), rgba(34,197,94,0.08));
+      border: 1px solid rgba(34,197,94,0.4);
+      border-radius: 11px;
+      color: var(--green); font-size: 0.96rem; font-weight: 700;
+      cursor: pointer; transition: all 0.2s;
+      box-shadow: 0 4px 20px rgba(34,197,94,0.1);
+      animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
-    #zip-btn:hover { background: rgba(34,197,94,0.2); }
+    #zip-btn:hover { background: rgba(34,197,94,0.18); box-shadow: 0 6px 28px rgba(34,197,94,0.2); }
 
-    /* ── Historique ── */
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.94); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    /* ══ HISTORIQUE ═════════════════════════════════════════════════════════ */
     #history-card { display: none; }
     .h-list { list-style: none; }
     .h-item {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 0.5rem 0;
-      border-bottom: 1px solid var(--border); font-size: 0.84rem;
+      padding: 0.55rem 0; border-bottom: 1px solid var(--border); font-size: 0.83rem;
     }
     .h-item:last-child { border-bottom: none; }
     .h-url {
       color: var(--muted); white-space: nowrap; overflow: hidden;
-      text-overflow: ellipsis; max-width: 82%;
+      text-overflow: ellipsis; max-width: 80%;
     }
     .h-reuse {
       background: transparent; border: 1px solid var(--border);
-      border-radius: 6px; color: var(--muted);
-      font-size: 0.75rem; padding: 0.18rem 0.5rem;
-      cursor: pointer; flex-shrink: 0; margin-left: 0.5rem;
-      transition: all 0.15s;
+      border-radius: 7px; color: var(--muted);
+      font-size: 0.73rem; padding: 0.18rem 0.55rem;
+      cursor: pointer; flex-shrink: 0; margin-left: 0.5rem; transition: all 0.15s;
     }
     .h-reuse:hover { border-color: var(--orange); color: var(--orange); }
 
-    /* ── Logout ── */
+    /* ── Logout + Footer ── */
     #logout-btn {
-      margin-top: 1.5rem;
-      padding: 0.3rem 0.9rem;
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: 7px;
-      color: var(--muted); font-size: 0.8rem;
+      margin-top: 1.5rem; padding: 0.3rem 0.9rem;
+      background: transparent; border: 1px solid var(--border);
+      border-radius: 7px; color: var(--muted); font-size: 0.78rem;
       cursor: pointer; transition: all 0.15s; align-self: flex-end;
     }
     #logout-btn:hover { border-color: var(--red); color: var(--red); }
 
-    /* ── Footer ── */
     footer {
-      margin-top: 2rem; color: var(--muted);
-      font-size: 0.75rem; text-align: center;
+      margin-top: 2rem; color: var(--muted2); font-size: 0.73rem; text-align: center;
     }
-    footer a { color: var(--orange); text-decoration: none; }
-    footer a:hover { text-decoration: underline; }
+    footer a { color: var(--muted); text-decoration: none; transition: color 0.15s; }
+    footer a:hover { color: var(--orange); }
 
     /* ── Spinner ── */
     .spin {
-      display: inline-block;
-      width: 12px; height: 12px;
-      border: 2px solid rgba(255,255,255,0.2);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: rot 0.7s linear infinite;
+      display: inline-block; width: 12px; height: 12px;
+      border: 2px solid rgba(255,255,255,0.2); border-top-color: #fff;
+      border-radius: 50%; animation: rot 0.7s linear infinite;
       margin-right: 6px; vertical-align: -1px;
     }
     @keyframes rot { to { transform: rotate(360deg); } }
@@ -348,12 +462,12 @@
 </head>
 <body>
 
-<!-- ══ Login ══════════════════════════════════════════════════════════════ -->
+<!-- ══ LOGIN ═══════════════════════════════════════════════════════════════ -->
 <div id="login-screen">
   <div class="login-box">
-    <div class="login-icon">🎵</div>
+    <div class="login-logo">🎵</div>
     <h2>SoundCloud Downloader</h2>
-    <p>Mot de passe requis</p>
+    <p>Entrez le mot de passe pour continuer</p>
     <input type="password" id="pwd-input" placeholder="••••••••"
            autocomplete="current-password" />
     <div id="login-error"></div>
@@ -361,15 +475,16 @@
   </div>
 </div>
 
-<!-- ══ App ════════════════════════════════════════════════════════════════ -->
+<!-- ══ APP ═════════════════════════════════════════════════════════════════ -->
 <div id="app-screen">
 
   <header>
-    <div class="logo">
+    <div class="logo-wrap">
+      <div class="logo-ring"></div>
       <div class="logo-icon">🎵</div>
-      <h1>SoundCloud Downloader</h1>
     </div>
-    <span class="sub">Interface graphique pour scdl</span>
+    <h1>SoundCloud Downloader</h1>
+    <span class="sub">Téléchargez vos playlists en un clic</span>
     <div id="scdl-badge"><span class="dot"></span> Vérification…</div>
   </header>
 
@@ -388,37 +503,71 @@
              placeholder="https://soundcloud.com/artiste/titre-ou-playlist" />
     </div>
 
-    <button class="btn-primary" id="dl-btn">⬇ Télécharger</button>
+    <button class="btn-primary" id="dl-btn">⬇&nbsp; Télécharger</button>
   </div>
 
   <!-- Progression -->
   <div class="card" id="progress-card">
-    <div class="progress-top">
-      <div class="card-label" style="margin-bottom:0">Progression</div>
-      <div style="display:flex;gap:0.5rem;align-items:center">
-        <span class="status-pill pending" id="status-label">En attente</span>
-        <button id="cancel-btn">Annuler</button>
+    <div class="artwork-bg" id="artwork-bg"></div>
+    <div class="progress-content">
+
+      <div class="prog-header">
+        <div class="card-label" style="margin-bottom:0">Progression</div>
+        <div style="display:flex;gap:0.45rem;align-items:center">
+          <span class="status-pill pending" id="status-label">En attente</span>
+          <button id="cancel-btn">Annuler</button>
+        </div>
       </div>
-    </div>
 
-    <!-- Track en cours -->
-    <div id="current-track" class="muted">Démarrage…</div>
-
-    <!-- Barre + compteur -->
-    <div class="progress-bar-wrap">
-      <div class="progress-bar-track">
-        <div id="progress-bar-fill"></div>
+      <!-- Artwork + meta SoundCloud -->
+      <div class="meta-row" id="meta-row" style="display:none">
+        <img id="artwork-thumb" class="artwork-thumb" alt="artwork" />
+        <div class="meta-text">
+          <div class="meta-title" id="meta-title"></div>
+          <div class="meta-author" id="meta-author"></div>
+        </div>
       </div>
-      <span id="progress-counter">—</span>
-    </div>
 
-    <!-- Console (cachée par défaut) -->
-    <button id="console-toggle"><span class="arrow">▶</span> Afficher les logs</button>
-    <div id="log-wrap">
-      <div id="log-box"></div>
-    </div>
+      <!-- Track en cours -->
+      <div id="current-track" class="muted">Démarrage…</div>
 
-    <button id="zip-btn">📦 Télécharger le ZIP</button>
+      <!-- Barre de progression -->
+      <div class="prog-bar-row">
+        <div class="prog-bar-track">
+          <div id="progress-bar-fill"></div>
+        </div>
+        <span id="progress-counter">—</span>
+      </div>
+
+      <div class="pills-row">
+        <span></span><!-- spacer -->
+      </div>
+
+      <!-- Liste de tracks -->
+      <div class="divider"></div>
+      <button class="toggle-btn" id="tracks-toggle">
+        <span class="arrow">▶</span>
+        Liste des sons
+        <span class="badge" id="tracks-badge">0</span>
+      </button>
+      <div id="tracks-wrap">
+        <ul class="track-list" id="track-list"></ul>
+      </div>
+
+      <!-- Console -->
+      <div class="divider"></div>
+      <button class="toggle-btn" id="console-toggle">
+        <span class="arrow">▶</span>
+        Logs
+      </button>
+      <div id="console-wrap">
+        <div id="log-box"></div>
+      </div>
+
+      <!-- Bouton ZIP -->
+      <button id="zip-btn">📦 Télécharger le ZIP</button>
+
+    </div>
   </div>
 
   <!-- Historique -->
@@ -429,16 +578,13 @@
 
   <button id="logout-btn">Déconnexion</button>
 
-  <footer>
-    Propulsé par <a href="https://github.com/flyingrub/scdl" target="_blank">scdl</a>
-  </footer>
+  <footer>Propulsé par <a href="https://github.com/flyingrub/scdl" target="_blank">scdl</a></footer>
 
 </div>
 
-<!-- ══ Scripts ════════════════════════════════════════════════════════════ -->
 <script>
-// ── Utilitaires ─────────────────────────────────────────────────────────
-const $  = id => document.getElementById(id);
+// ── Utils ────────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
 const API = async (path, opts = {}) => {
   const res = await fetch(path, {
     credentials: "same-origin",
@@ -450,18 +596,18 @@ const API = async (path, opts = {}) => {
   return data;
 };
 
-// ── Auth ────────────────────────────────────────────────────────────────
+// ── Auth ─────────────────────────────────────────────────────────────────
 async function checkAuth() {
   try {
     const { authenticated } = await API("/api/me");
-    if (authenticated) showApp();
-    else showLogin();
+    authenticated ? showApp() : showLogin();
   } catch { showLogin(); }
 }
 
 function showLogin() {
   $("login-screen").style.display = "flex";
   $("app-screen").style.display   = "none";
+  document.body.classList.remove("downloading");
 }
 
 function showApp() {
@@ -471,17 +617,13 @@ function showApp() {
   checkScdl();
 }
 
-// Login
 async function doLogin() {
   const pwd = $("pwd-input").value;
   $("login-error").textContent = "";
   $("login-btn").disabled = true;
   $("login-btn").innerHTML = '<span class="spin"></span>Connexion…';
   try {
-    await API("/api/login", {
-      method: "POST",
-      body: JSON.stringify({ password: pwd }),
-    });
+    await API("/api/login", { method: "POST", body: JSON.stringify({ password: pwd }) });
     showApp();
   } catch (e) {
     $("login-error").textContent = e.message;
@@ -490,17 +632,14 @@ async function doLogin() {
     $("login-btn").textContent = "Se connecter";
   }
 }
-
 $("login-btn").addEventListener("click", doLogin);
 $("pwd-input").addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
-
-// Logout
 $("logout-btn").addEventListener("click", async () => {
   await API("/api/logout", { method: "POST" });
   showLogin();
 });
 
-// ── scdl status ─────────────────────────────────────────────────────────
+// ── scdl badge ───────────────────────────────────────────────────────────
 async function checkScdl() {
   try {
     const d = await API("/api/check-scdl");
@@ -510,12 +649,12 @@ async function checkScdl() {
       el.innerHTML = `<span class="dot"></span> scdl ${d.version || ""}`;
     } else {
       el.className = "warn";
-      el.innerHTML = `<span class="dot"></span> scdl non installé — pip install scdl`;
+      el.innerHTML = `<span class="dot"></span> scdl non installé`;
     }
   } catch {}
 }
 
-// ── Tabs ────────────────────────────────────────────────────────────────
+// ── Tabs ─────────────────────────────────────────────────────────────────
 document.querySelectorAll(".tab").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
@@ -524,51 +663,100 @@ document.querySelectorAll(".tab").forEach(btn => {
 });
 
 // ── État du job ──────────────────────────────────────────────────────────
-let currentJobId = null;
-let pollTimer    = null;
-let logOffset    = 0;
-const POLL_MS    = 800;
+let currentJobId = null, pollTimer = null, logOffset = 0;
+const POLL_MS = 800;
 
+// ── Artwork & meta ───────────────────────────────────────────────────────
+function setOembed(oembed) {
+  if (!oembed || (!oembed.title && !oembed.thumbnail)) return;
+
+  $("meta-row").style.display = "flex";
+  if (oembed.title)  $("meta-title").textContent  = oembed.title;
+  if (oembed.author) $("meta-author").textContent = oembed.author;
+
+  if (oembed.thumbnail) {
+    const img = $("artwork-thumb");
+    img.src = oembed.thumbnail;
+    img.classList.add("visible");
+
+    const bg = $("artwork-bg");
+    bg.style.backgroundImage = `url(${oembed.thumbnail})`;
+    $("progress-card").classList.add("has-art");
+  }
+}
+
+// ── Status ───────────────────────────────────────────────────────────────
 function setStatus(s) {
   const el = $("status-label");
   el.className = "status-pill " + s;
   const labels = {
-    pending:   "En attente",
-    running:   "⬇ Téléchargement en cours…",
-    done:      "✅ Terminé",
-    error:     "❌ Erreur",
-    cancelled: "⛔ Annulé",
+    pending: "En attente", running: "⬇ En cours…",
+    done: "✅ Terminé", error: "❌ Erreur", cancelled: "⛔ Annulé",
   };
   el.textContent = labels[s] || s;
 
   const fill = $("progress-bar-fill");
-  if (s === "done")                          { fill.className = "done"; fill.style.width = "100%"; }
-  else if (s === "error" || s === "cancelled") fill.className = "error";
+  if (s === "done")                            { fill.className = "done"; fill.style.width = "100%"; }
+  else if (s === "error" || s === "cancelled")   fill.className = "error";
+
+  if (s === "running") document.body.classList.add("downloading");
+  else                 document.body.classList.remove("downloading");
 }
 
+// ── Progress ─────────────────────────────────────────────────────────────
 function updateProgress(p) {
   if (!p) return;
-  const fill    = $("progress-bar-fill");
-  const counter = $("progress-counter");
-  const track   = $("current-track");
-
-  // Barre + compteur
+  const fill = $("progress-bar-fill"), counter = $("progress-counter"), track = $("current-track");
   if (p.total > 0) {
-    const pct = Math.min(100, Math.round((p.index / p.total) * 100));
-    fill.style.width        = pct + "%";
-    counter.textContent     = `${p.index} / ${p.total}`;
+    fill.style.width    = Math.min(100, Math.round((p.index / p.total) * 100)) + "%";
+    counter.textContent = `${p.index} / ${p.total}`;
   } else {
-    fill.style.width    = p.done > 0 ? "30%" : "0%";   // indéterminé
+    fill.style.width    = p.done > 0 ? "20%" : "0%";
     counter.textContent = p.done > 0 ? String(p.done) : "—";
   }
-
-  // Nom du track en cours
-  if (p.current) {
-    track.textContent = "⬇ " + p.current;
-    track.className   = "";
-  }
+  if (p.current) { track.textContent = "⬇ " + p.current; track.className = ""; }
 }
 
+// ── Track list ────────────────────────────────────────────────────────────
+let renderedTracks = 0;
+
+function updateTrackList(tracks) {
+  if (!tracks || !tracks.length) return;
+  const list = $("track-list");
+  // Ajoute uniquement les nouveaux tracks (perf)
+  for (let i = renderedTracks; i < tracks.length; i++) {
+    const t  = tracks[i];
+    const li = document.createElement("li");
+    li.className = "track-item " + t.status;
+    li.dataset.idx = i;
+    li.innerHTML = `
+      <span class="track-icon">${trackIcon(t.status)}</span>
+      <span class="track-name">${escHtml(t.name)}</span>
+    `;
+    list.appendChild(li);
+  }
+  // Met à jour les statuts des tracks déjà rendus
+  for (let i = 0; i < renderedTracks; i++) {
+    const t  = tracks[i];
+    const li = list.querySelector(`[data-idx="${i}"]`);
+    if (li && li.className !== "track-item " + t.status) {
+      li.className = "track-item " + t.status;
+      li.querySelector(".track-icon").textContent = trackIcon(t.status);
+    }
+  }
+  renderedTracks = tracks.length;
+  $("tracks-badge").textContent = tracks.length;
+}
+
+function trackIcon(s) {
+  return s === "done" ? "✓" : s === "error" ? "✗" : "·";
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+// ── Logs ──────────────────────────────────────────────────────────────────
 function appendLogs(lines) {
   const box = $("log-box");
   for (const line of lines) {
@@ -582,59 +770,67 @@ function appendLogs(lines) {
   box.scrollTop = box.scrollHeight;
 }
 
-function resetLog() {
+function resetAll() {
   $("log-box").innerHTML = "";
+  $("track-list").innerHTML = "";
+  renderedTracks = 0;
+  $("tracks-badge").textContent = "0";
   $("progress-bar-fill").style.width = "0%";
   $("progress-bar-fill").className   = "";
   $("progress-counter").textContent  = "—";
   $("current-track").textContent     = "Démarrage…";
   $("current-track").className       = "muted";
+  $("zip-btn").style.display         = "none";
+  $("meta-row").style.display        = "none";
+  $("artwork-thumb").classList.remove("visible");
+  $("artwork-bg").style.backgroundImage = "";
+  $("progress-card").classList.remove("has-art");
+  document.body.classList.remove("downloading");
 }
 
-// ── Toggle console ───────────────────────────────────────────────────────
-$("console-toggle").addEventListener("click", () => {
-  const btn  = $("console-toggle");
-  const wrap = $("log-wrap");
-  const open = btn.classList.toggle("open");
-  wrap.style.display = open ? "block" : "none";
-  btn.lastChild.textContent = open ? " Masquer les logs" : " Afficher les logs";
-});
+// ── Toggles ──────────────────────────────────────────────────────────────
+function makeToggle(btnId, wrapId) {
+  $(btnId).addEventListener("click", () => {
+    const open = $(btnId).classList.toggle("open");
+    $(wrapId).style.display = open ? "block" : "none";
+  });
+}
+makeToggle("tracks-toggle",  "tracks-wrap");
+makeToggle("console-toggle", "console-wrap");
 
-// ── Lancer le téléchargement ─────────────────────────────────────────────
+// ── Lancer le téléchargement ──────────────────────────────────────────────
 $("dl-btn").addEventListener("click", async () => {
   const url = $("url-input").value.trim();
   if (!url) { alert("Saisis une URL SoundCloud."); return; }
 
   stopPolling();
-  resetLog();
-  $("zip-btn").style.display = "none";
+  resetAll();
   setStatus("pending");
   $("progress-card").style.display = "block";
-  logOffset    = 0;
-  currentJobId = null;
+  logOffset = 0; currentJobId = null;
 
-  $("dl-btn").disabled    = true;
-  $("dl-btn").innerHTML   = '<span class="spin"></span>Démarrage…';
+  $("dl-btn").disabled  = true;
+  $("dl-btn").innerHTML = '<span class="spin"></span>Démarrage…';
 
   try {
     const { job_id } = await API("/api/download", {
-      method: "POST",
-      body: JSON.stringify({ url }),
+      method: "POST", body: JSON.stringify({ url }),
     });
     currentJobId = job_id;
     addHistory(url);
     startPolling();
   } catch (e) {
-    resetLog();
     appendLogs(["❌ " + e.message]);
     setStatus("error");
     resetBtn();
   }
 });
 
-// ── Polling ──────────────────────────────────────────────────────────────
+// ── Polling ───────────────────────────────────────────────────────────────
 function startPolling() { stopPolling(); poll(); }
 function stopPolling()  { if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; } }
+
+let oembed_loaded = false;
 
 async function poll() {
   if (!currentJobId) return;
@@ -642,7 +838,11 @@ async function poll() {
     const d = await API(`/api/status/${currentJobId}?since=${logOffset}`);
 
     if (d.logs?.length) { appendLogs(d.logs); logOffset += d.logs.length; }
-    updateProgress(d.progress);
+    if (d.progress)       updateProgress(d.progress);
+    if (d.tracks)         updateTrackList(d.tracks);
+    if (d.oembed && !oembed_loaded && (d.oembed.title || d.oembed.thumbnail)) {
+      setOembed(d.oembed); oembed_loaded = true;
+    }
     setStatus(d.status);
 
     if (d.status === "running" || d.status === "pending") {
@@ -650,12 +850,13 @@ async function poll() {
     } else {
       resetBtn();
       if (d.status === "done" && d.has_zip) {
-        const label = d.file_count === 1
+        const n = d.file_count || 0;
+        $("zip-btn").textContent = n === 1
           ? "📦 Télécharger le fichier"
-          : `📦 Télécharger le ZIP (${d.file_count} sons)`;
-        $("zip-btn").textContent = label;
+          : `📦 Télécharger le ZIP — ${n} son${n > 1 ? "s" : ""}`;
         $("zip-btn").style.display = "block";
-        setCurrentTrack(`${d.file_count} son${d.file_count > 1 ? "s" : ""} prêt${d.file_count > 1 ? "s" : ""} !`, false);
+        $("current-track").textContent = `${n} son${n > 1 ? "s" : ""} prêt${n > 1 ? "s" : ""} !`;
+        $("current-track").className = "";
       }
     }
   } catch {
@@ -663,19 +864,16 @@ async function poll() {
   }
 }
 
-// ── Bouton ZIP ───────────────────────────────────────────────────────────
+// ── ZIP ───────────────────────────────────────────────────────────────────
 $("zip-btn").addEventListener("click", () => {
   if (!currentJobId) return;
-  // Déclenche le téléchargement via un lien invisible
   const a = document.createElement("a");
-  a.href     = `/api/download-zip/${currentJobId}`;
+  a.href = `/api/download-zip/${currentJobId}`;
   a.download = "";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
 });
 
-// ── Annuler ──────────────────────────────────────────────────────────────
+// ── Annuler ───────────────────────────────────────────────────────────────
 $("cancel-btn").addEventListener("click", async () => {
   if (!currentJobId) return;
   stopPolling();
@@ -685,19 +883,19 @@ $("cancel-btn").addEventListener("click", async () => {
   resetBtn();
 });
 
-// ── Reset btn ────────────────────────────────────────────────────────────
 function resetBtn() {
-  $("dl-btn").disabled    = false;
-  $("dl-btn").textContent = "⬇ Télécharger";
+  $("dl-btn").disabled  = false;
+  $("dl-btn").innerHTML = "⬇&nbsp; Télécharger";
+  oembed_loaded = false;
 }
 
-// ── Historique ───────────────────────────────────────────────────────────
+// ── Historique ────────────────────────────────────────────────────────────
 function addHistory(url) {
   const li = document.createElement("li");
   li.className = "h-item";
   li.innerHTML = `
     <span class="h-url" title="${url}">${url}</span>
-    <button class="h-reuse" data-url="${url}">↻ Réutiliser</button>
+    <button class="h-reuse" data-url="${url}">↻</button>
   `;
   $("h-list").prepend(li);
   $("history-card").style.display = "block";
@@ -707,7 +905,7 @@ function addHistory(url) {
   });
 }
 
-// ── Init ─────────────────────────────────────────────────────────────────
+// ── Init ──────────────────────────────────────────────────────────────────
 checkAuth();
 </script>
 </body>

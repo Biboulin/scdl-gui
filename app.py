@@ -5,10 +5,13 @@ Flask backend : télécharge via scdl, zip les fichiers, les sert en download.
 Protégé par mot de passe (APP_PASSWORD dans .env / variables d'env Docker).
 """
 
+import json
 import os
 import re
 import subprocess
 import threading
+import urllib.parse
+import urllib.request
 import uuid
 import zipfile
 import shutil
@@ -118,20 +121,46 @@ def cleanup_old_jobs():
 threading.Thread(target=cleanup_old_jobs, daemon=True).start()
 
 
+# ── oEmbed ─────────────────────────────────────────────────────────────────
+def fetch_oembed(url: str) -> dict:
+    """Récupère titre + artwork via l'API oEmbed publique de SoundCloud."""
+    try:
+        oembed_url = (
+            "https://soundcloud.com/oembed?format=json&url="
+            + urllib.parse.quote(url, safe="")
+        )
+        req = urllib.request.Request(oembed_url, headers={"User-Agent": "scdl-webapp/1.0"})
+        with urllib.request.urlopen(req, timeout=6) as r:
+            data = json.loads(r.read())
+        return {
+            "title":     data.get("title", ""),
+            "author":    data.get("author_name", ""),
+            "thumbnail": data.get("thumbnail_url", ""),
+        }
+    except Exception:
+        return {}
+
+
 # ── Téléchargement ─────────────────────────────────────────────────────────
 def parse_progress(line: str, job: dict):
-    """Met à jour job['progress'] en parsant une ligne de sortie yt-dlp/scdl."""
+    """Met à jour job['progress'] et job['tracks'] en parsant une ligne yt-dlp/scdl."""
     p = job["progress"]
+    tracks = job["tracks"]
 
-    # "[download] Downloading item 3 of 23"  →  done=2, total=23
+    # "[download] Downloading item 3 of 23"
     m = re.search(r"\[download\] Downloading item (\d+) of (\d+)", line)
     if m:
-        p["index"] = int(m.group(1))   # item en cours (1-based)
-        p["total"] = int(m.group(2))
-        p["done"]  = p["index"] - 1    # nombre de terminés avant celui-ci
+        idx   = int(m.group(1))
+        total = int(m.group(2))
+        # Marque le track précédent comme done
+        if tracks and tracks[-1]["status"] == "downloading":
+            tracks[-1]["status"] = "done"
+        p["index"] = idx
+        p["total"] = total
+        p["done"]  = idx - 1
         return
 
-    # "[SoundCloud] Playlist name: Downloading 23 items"
+    # "[SoundCloud] Playlist …: Downloading 23 items"
     m = re.search(r"Downloading (\d+) items?", line, re.I)
     if m and not p["total"]:
         p["total"] = int(m.group(1))
@@ -141,13 +170,23 @@ def parse_progress(line: str, job: dict):
     m = re.search(r"\[download\] Destination:\s*(.+)", line)
     if m:
         fname = os.path.basename(m.group(1).strip())
-        # Retire l'extension pour un affichage propre
-        p["current"] = re.sub(r"\.(mp3|opus|m4a|flac|wav)$", "", fname, flags=re.I)
+        name  = re.sub(r"\.(mp3|opus|m4a|flac|wav)$", "", fname, flags=re.I)
+        p["current"] = name
+        # Ajoute le track à la liste (ou met à jour si même index)
+        if not tracks or tracks[-1]["name"] != name:
+            tracks.append({"name": name, "status": "downloading"})
         return
 
-    # Fallback : ligne de complétion yt-dlp "100% of X.XXMiB"
-    if "100%" in line and "of" in line and not re.search(r"Downloading item", line):
-        if p["index"]:
+    # Erreur sur un track → marque le dernier en erreur
+    if re.search(r"\[download\].*ERROR|Unable to download|HTTP Error", line, re.I):
+        if tracks and tracks[-1]["status"] == "downloading":
+            tracks[-1]["status"] = "error"
+        return
+
+    # "100% of X.xxMiB" → track courant terminé
+    if re.search(r"100%.*of.*iB", line):
+        if tracks and tracks[-1]["status"] == "downloading":
+            tracks[-1]["status"] = "done"
             p["done"] = p["index"]
 
 
@@ -156,6 +195,7 @@ def run_download(job_id: str, url: str):
     job = jobs[job_id]
     job["status"] = "running"
     job["progress"] = {"total": 0, "done": 0, "index": 0, "current": ""}
+    job["tracks"]   = []
 
     scdl_path = find_scdl()
     if not scdl_path:
@@ -222,6 +262,10 @@ def run_download(job_id: str, url: str):
         job["file_count"] = len(files)
         job["status"] = "done"
         job["logs"].append(f"✅ Archive prête — {len(files)} musique(s) téléchargée(s) !")
+        # Marque tous les tracks encore en 'downloading' comme done
+        for t in job["tracks"]:
+            if t["status"] == "downloading":
+                t["status"] = "done"
 
         # Nettoie le dossier tmp (le ZIP suffit)
         shutil.rmtree(tmpdir, ignore_errors=True)
@@ -259,12 +303,15 @@ def start_download():
         return jsonify({"error": "L'URL doit être une URL SoundCloud"}), 400
 
     job_id = str(uuid.uuid4())
+    oembed = fetch_oembed(url)
     jobs[job_id] = {
         "id": job_id,
         "url": url,
         "status": "pending",
         "logs": [],
         "progress": {"total": 0, "done": 0, "index": 0, "current": ""},
+        "tracks": [],
+        "oembed": oembed,
         "created_at": time.time(),
     }
 
@@ -290,6 +337,8 @@ def get_status(job_id: str):
         "file_count": job.get("file_count"),
         "has_zip": bool(job.get("zip_path") and os.path.exists(job.get("zip_path", ""))),
         "progress": job.get("progress", {"total": 0, "done": 0, "index": 0, "current": ""}),
+        "tracks":   job.get("tracks", []),
+        "oembed":   job.get("oembed", {}),
     })
 
 
