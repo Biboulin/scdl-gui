@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SoundCloud Downloader</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --orange:       #ff5500;
+      --orange-dark:  #cc4400;
+      --orange-dim:   rgba(255,85,0,0.12);
+      --bg:           #0f0f0f;
+      --surface:      #1a1a1a;
+      --surface2:     #242424;
+      --border:       #2e2e2e;
+      --text:         #f0f0f0;
+      --muted:        #777;
+      --green:        #22c55e;
+      --green-dim:    rgba(34,197,94,0.12);
+      --red:          #ef4444;
+      --red-dim:      rgba(239,68,68,0.12);
+      --yellow:       #f59e0b;
+      --yellow-dim:   rgba(245,158,11,0.12);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2.5rem 1rem 3rem;
+    }
+
+    /* ────── Login Screen ────── */
+    #login-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      width: 100%;
+    }
+
+    .login-box {
+      width: 100%;
+      max-width: 380px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem 2rem 1.75rem;
+      text-align: center;
+    }
+
+    .login-icon {
+      width: 52px; height: 52px;
+      background: var(--orange);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem;
+      margin: 0 auto 1rem;
+    }
+
+    .login-box h2 { font-size: 1.25rem; margin-bottom: 0.3rem; }
+    .login-box p  { color: var(--muted); font-size: 0.85rem; margin-bottom: 1.5rem; }
+
+    .login-box input[type="password"] {
+      width: 100%;
+      padding: 0.7rem 1rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      color: var(--text);
+      font-size: 1rem;
+      outline: none;
+      text-align: center;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.75rem;
+      transition: border-color 0.15s;
+    }
+    .login-box input[type="password"]:focus { border-color: var(--orange); }
+
+    #login-error {
+      color: var(--red);
+      font-size: 0.82rem;
+      min-height: 1.1em;
+      margin-bottom: 0.5rem;
+    }
+
+    /* ────── Main App ────── */
+    #app-screen { display: none; width: 100%; max-width: 680px; }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+
+    .logo { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 0.35rem; }
+    .logo-icon {
+      width: 40px; height: 40px;
+      background: var(--orange); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+    }
+    header h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.4px; }
+    header .sub { color: var(--muted); font-size: 0.85rem; }
+
+    #scdl-badge {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      margin-top: 0.6rem;
+      padding: 0.25rem 0.8rem;
+      border-radius: 999px; font-size: 0.78rem; font-weight: 500;
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    #scdl-badge.ok   { border-color: var(--green); color: var(--green); }
+    #scdl-badge.warn { border-color: var(--yellow); color: var(--yellow); }
+    #scdl-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+    /* ── Card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.6rem;
+      margin-bottom: 1rem;
+    }
+
+    .card-label {
+      font-size: 0.72rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--muted); margin-bottom: 1rem;
+    }
+
+    /* ── Tabs ── */
+    .tabs { display: flex; gap: 0.45rem; margin-bottom: 1.1rem; }
+    .tab {
+      padding: 0.4rem 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted); font-size: 0.84rem;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .tab.active { background: var(--orange); border-color: var(--orange); color: #fff; font-weight: 600; }
+    .tab:hover:not(.active) { border-color: var(--orange); color: var(--text); }
+
+    /* ── Input ── */
+    .field { margin-bottom: 1rem; }
+    label { display: block; font-size: 0.82rem; color: var(--muted); margin-bottom: 0.35rem; }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 0.65rem 0.9rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      color: var(--text); font-size: 0.95rem;
+      outline: none; transition: border-color 0.15s;
+    }
+    input[type="text"]::placeholder { color: var(--muted); }
+    input[type="text"]:focus { border-color: var(--orange); }
+
+    /* ── Bouton principal ── */
+    .btn-primary {
+      width: 100%;
+      padding: 0.75rem;
+      background: var(--orange);
+      border: none; border-radius: 10px;
+      color: #fff; font-size: 0.97rem; font-weight: 600;
+      cursor: pointer; transition: background 0.15s, transform 0.1s;
+    }
+    .btn-primary:hover:not(:disabled) { background: var(--orange-dark); }
+    .btn-primary:active:not(:disabled) { transform: scale(0.99); }
+    .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* ── Progress card ── */
+    #progress-card { display: none; }
+
+    .progress-top {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      margin-bottom: 0.9rem;
+    }
+
+    .status-pill {
+      padding: 0.22rem 0.7rem;
+      border-radius: 999px; font-size: 0.75rem; font-weight: 600;
+    }
+    .status-pill.pending   { background: var(--surface2); color: var(--muted); }
+    .status-pill.running   { background: var(--yellow-dim); color: var(--yellow); }
+    .status-pill.done      { background: var(--green-dim);  color: var(--green); }
+    .status-pill.error     { background: var(--red-dim);    color: var(--red); }
+    .status-pill.cancelled { background: var(--surface2);   color: var(--muted); }
+
+    #cancel-btn {
+      padding: 0.22rem 0.7rem;
+      border-radius: 7px; border: 1px solid var(--border);
+      background: transparent; color: var(--muted);
+      font-size: 0.78rem; cursor: pointer; transition: all 0.15s;
+    }
+    #cancel-btn:hover { border-color: var(--red); color: var(--red); }
+
+    /* ── Log box ── */
+    #log-box {
+      background: #0a0a0a;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.8rem 1rem;
+      font-family: "SF Mono", "Fira Mono", ui-monospace, monospace;
+      font-size: 0.77rem; line-height: 1.65;
+      max-height: 280px; overflow-y: auto;
+      color: #bbb; white-space: pre-wrap; word-break: break-all;
+    }
+    #log-box .l-ok   { color: var(--green); }
+    #log-box .l-err  { color: var(--red); }
+    #log-box .l-info { color: #ff7733; }
+
+    /* ── Bouton ZIP ── */
+    #zip-btn {
+      display: none;
+      width: 100%;
+      margin-top: 1rem;
+      padding: 0.8rem;
+      background: var(--green-dim);
+      border: 1px solid var(--green);
+      border-radius: 10px;
+      color: var(--green); font-size: 0.97rem; font-weight: 600;
+      cursor: pointer; transition: background 0.15s;
+    }
+    #zip-btn:hover { background: rgba(34,197,94,0.2); }
+
+    /* ── Historique ── */
+    #history-card { display: none; }
+    .h-list { list-style: none; }
+    .h-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--border); font-size: 0.84rem;
+    }
+    .h-item:last-child { border-bottom: none; }
+    .h-url {
+      color: var(--muted); white-space: nowrap; overflow: hidden;
+      text-overflow: ellipsis; max-width: 82%;
+    }
+    .h-reuse {
+      background: transparent; border: 1px solid var(--border);
+      border-radius: 6px; color: var(--muted);
+      font-size: 0.75rem; padding: 0.18rem 0.5rem;
+      cursor: pointer; flex-shrink: 0; margin-left: 0.5rem;
+      transition: all 0.15s;
+    }
+    .h-reuse:hover { border-color: var(--orange); color: var(--orange); }
+
+    /* ── Logout ── */
+    #logout-btn {
+      margin-top: 1.5rem;
+      padding: 0.3rem 0.9rem;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--muted); font-size: 0.8rem;
+      cursor: pointer; transition: all 0.15s; align-self: flex-end;
+    }
+    #logout-btn:hover { border-color: var(--red); color: var(--red); }
+
+    /* ── Footer ── */
+    footer {
+      margin-top: 2rem; color: var(--muted);
+      font-size: 0.75rem; text-align: center;
+    }
+    footer a { color: var(--orange); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* ── Spinner ── */
+    .spin {
+      display: inline-block;
+      width: 12px; height: 12px;
+      border: 2px solid rgba(255,255,255,0.2);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: rot 0.7s linear infinite;
+      margin-right: 6px; vertical-align: -1px;
+    }
+    @keyframes rot { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<!-- ══ Login ══════════════════════════════════════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-icon">🎵</div>
+    <h2>SoundCloud Downloader</h2>
+    <p>Mot de passe requis</p>
+    <input type="password" id="pwd-input" placeholder="••••••••"
+           autocomplete="current-password" />
+    <div id="login-error"></div>
+    <button class="btn-primary" id="login-btn">Se connecter</button>
+  </div>
+</div>
+
+<!-- ══ App ════════════════════════════════════════════════════════════════ -->
+<div id="app-screen">
+
+  <header>
+    <div class="logo">
+      <div class="logo-icon">🎵</div>
+      <h1>SoundCloud Downloader</h1>
+    </div>
+    <span class="sub">Interface graphique pour scdl</span>
+    <div id="scdl-badge"><span class="dot"></span> Vérification…</div>
+  </header>
+
+  <!-- Formulaire -->
+  <div class="card">
+    <div class="card-label">Nouveau téléchargement</div>
+
+    <div class="tabs">
+      <button class="tab active" data-type="track">🎵 Track</button>
+      <button class="tab" data-type="playlist">📋 Playlist</button>
+    </div>
+
+    <div class="field">
+      <label for="url-input">URL SoundCloud</label>
+      <input type="text" id="url-input"
+             placeholder="https://soundcloud.com/artiste/titre-ou-playlist" />
+    </div>
+
+    <button class="btn-primary" id="dl-btn">⬇ Télécharger</button>
+  </div>
+
+  <!-- Progression -->
+  <div class="card" id="progress-card">
+    <div class="progress-top">
+      <div>
+        <div class="card-label" style="margin-bottom:0.3rem">Progression</div>
+        <span class="status-pill pending" id="status-label">En attente</span>
+      </div>
+      <button id="cancel-btn">Annuler</button>
+    </div>
+
+    <div id="log-box">Démarrage…</div>
+
+    <button id="zip-btn">📦 Télécharger le ZIP</button>
+  </div>
+
+  <!-- Historique -->
+  <div class="card" id="history-card">
+    <div class="card-label">Historique</div>
+    <ul class="h-list" id="h-list"></ul>
+  </div>
+
+  <button id="logout-btn">Déconnexion</button>
+
+  <footer>
+    Propulsé par <a href="https://github.com/flyingrub/scdl" target="_blank">scdl</a>
+  </footer>
+
+</div>
+
+<!-- ══ Scripts ════════════════════════════════════════════════════════════ -->
+<script>
+// ── Utilitaires ─────────────────────────────────────────────────────────
+const $  = id => document.getElementById(id);
+const API = async (path, opts = {}) => {
+  const res = await fetch(path, {
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json", ...(opts.headers || {}) },
+    ...opts,
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Erreur serveur");
+  return data;
+};
+
+// ── Auth ────────────────────────────────────────────────────────────────
+async function checkAuth() {
+  try {
+    const { authenticated } = await API("/api/me");
+    if (authenticated) showApp();
+    else showLogin();
+  } catch { showLogin(); }
+}
+
+function showLogin() {
+  $("login-screen").style.display = "flex";
+  $("app-screen").style.display   = "none";
+}
+
+function showApp() {
+  $("login-screen").style.display = "none";
+  $("app-screen").style.display   = "flex";
+  $("app-screen").style.flexDirection = "column";
+  checkScdl();
+}
+
+// Login
+async function doLogin() {
+  const pwd = $("pwd-input").value;
+  $("login-error").textContent = "";
+  $("login-btn").disabled = true;
+  $("login-btn").innerHTML = '<span class="spin"></span>Connexion…';
+  try {
+    await API("/api/login", {
+      method: "POST",
+      body: JSON.stringify({ password: pwd }),
+    });
+    showApp();
+  } catch (e) {
+    $("login-error").textContent = e.message;
+  } finally {
+    $("login-btn").disabled = false;
+    $("login-btn").textContent = "Se connecter";
+  }
+}
+
+$("login-btn").addEventListener("click", doLogin);
+$("pwd-input").addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
+
+// Logout
+$("logout-btn").addEventListener("click", async () => {
+  await API("/api/logout", { method: "POST" });
+  showLogin();
+});
+
+// ── scdl status ─────────────────────────────────────────────────────────
+async function checkScdl() {
+  try {
+    const d = await API("/api/check-scdl");
+    const el = $("scdl-badge");
+    if (d.installed) {
+      el.className = "ok";
+      el.innerHTML = `<span class="dot"></span> scdl ${d.version || ""}`;
+    } else {
+      el.className = "warn";
+      el.innerHTML = `<span class="dot"></span> scdl non installé — pip install scdl`;
+    }
+  } catch {}
+}
+
+// ── Tabs ────────────────────────────────────────────────────────────────
+document.querySelectorAll(".tab").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+  });
+});
+
+// ── État du job ──────────────────────────────────────────────────────────
+let currentJobId = null;
+let pollTimer    = null;
+let logOffset    = 0;
+const POLL_MS    = 800;
+
+function setStatus(s) {
+  const el = $("status-label");
+  el.className = "status-pill " + s;
+  const labels = {
+    pending:   "En attente",
+    running:   "⬇ Téléchargement en cours…",
+    done:      "✅ Terminé",
+    error:     "❌ Erreur",
+    cancelled: "⛔ Annulé",
+  };
+  el.textContent = labels[s] || s;
+}
+
+function appendLogs(lines) {
+  const box = $("log-box");
+  for (const line of lines) {
+    const s = document.createElement("span");
+    if (/^✅|^\[✔\]/.test(line))           s.className = "l-ok";
+    else if (/^❌|^\[✘\]|error/i.test(line)) s.className = "l-err";
+    else if (/^[▶📁📦⛔⚠]/.test(line))     s.className = "l-info";
+    s.textContent = line + "\n";
+    box.appendChild(s);
+  }
+  box.scrollTop = box.scrollHeight;
+}
+
+function resetLog() { $("log-box").innerHTML = ""; }
+
+// ── Lancer le téléchargement ─────────────────────────────────────────────
+$("dl-btn").addEventListener("click", async () => {
+  const url = $("url-input").value.trim();
+  if (!url) { alert("Saisis une URL SoundCloud."); return; }
+
+  stopPolling();
+  resetLog();
+  $("zip-btn").style.display = "none";
+  setStatus("pending");
+  $("progress-card").style.display = "block";
+  logOffset    = 0;
+  currentJobId = null;
+
+  $("dl-btn").disabled    = true;
+  $("dl-btn").innerHTML   = '<span class="spin"></span>Démarrage…';
+
+  try {
+    const { job_id } = await API("/api/download", {
+      method: "POST",
+      body: JSON.stringify({ url }),
+    });
+    currentJobId = job_id;
+    addHistory(url);
+    startPolling();
+  } catch (e) {
+    resetLog();
+    appendLogs(["❌ " + e.message]);
+    setStatus("error");
+    resetBtn();
+  }
+});
+
+// ── Polling ──────────────────────────────────────────────────────────────
+function startPolling() { stopPolling(); poll(); }
+function stopPolling()  { if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; } }
+
+async function poll() {
+  if (!currentJobId) return;
+  try {
+    const d = await API(`/api/status/${currentJobId}?since=${logOffset}`);
+
+    if (d.logs?.length) { appendLogs(d.logs); logOffset += d.logs.length; }
+    setStatus(d.status);
+
+    if (d.status === "running" || d.status === "pending") {
+      pollTimer = setTimeout(poll, POLL_MS);
+    } else {
+      resetBtn();
+      if (d.status === "done" && d.has_zip) {
+        $("zip-btn").style.display = "block";
+      }
+    }
+  } catch {
+    pollTimer = setTimeout(poll, POLL_MS * 2);
+  }
+}
+
+// ── Bouton ZIP ───────────────────────────────────────────────────────────
+$("zip-btn").addEventListener("click", () => {
+  if (!currentJobId) return;
+  // Déclenche le téléchargement via un lien invisible
+  const a = document.createElement("a");
+  a.href     = `/api/download-zip/${currentJobId}`;
+  a.download = "";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+});
+
+// ── Annuler ──────────────────────────────────────────────────────────────
+$("cancel-btn").addEventListener("click", async () => {
+  if (!currentJobId) return;
+  stopPolling();
+  try { await API(`/api/cancel/${currentJobId}`, { method: "POST" }); } catch {}
+  setStatus("cancelled");
+  appendLogs(["⛔ Annulé par l'utilisateur."]);
+  resetBtn();
+});
+
+// ── Reset btn ────────────────────────────────────────────────────────────
+function resetBtn() {
+  $("dl-btn").disabled    = false;
+  $("dl-btn").textContent = "⬇ Télécharger";
+}
+
+// ── Historique ───────────────────────────────────────────────────────────
+function addHistory(url) {
+  const li = document.createElement("li");
+  li.className = "h-item";
+  li.innerHTML = `
+    <span class="h-url" title="${url}">${url}</span>
+    <button class="h-reuse" data-url="${url}">↻ Réutiliser</button>
+  `;
+  $("h-list").prepend(li);
+  $("history-card").style.display = "block";
+  li.querySelector(".h-reuse").addEventListener("click", e => {
+    $("url-input").value = e.currentTarget.dataset.url;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────
+checkAuth();
+</script>
+</body>
+</html>

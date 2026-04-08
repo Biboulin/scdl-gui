@@ -1,0 +1,14 @@
+services:
+  scdl-webapp:
+    build: .
+    container_name: scdl-webapp
+    restart: unless-stopped
+    ports:
+      - "5005:5005"
+    environment:
+      # 🔑 Change ces valeurs avant de déployer !
+      - APP_PASSWORD=mon-mot-de-passe
+      - SECRET_KEY=une-cle-secrete-longue-et-aleatoire
+    tmpfs:
+      # Stockage temporaire en RAM pour les fichiers téléchargés (rapide + auto-nettoyé)
+      - /tmp:size=2g,mode=1777
