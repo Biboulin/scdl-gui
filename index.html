@@ -185,8 +185,8 @@
     #progress-card { display: none; }
 
     .progress-top {
-      display: flex; justify-content: space-between; align-items: flex-start;
-      margin-bottom: 0.9rem;
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 1.1rem;
     }
 
     .status-pill {
@@ -207,7 +207,62 @@
     }
     #cancel-btn:hover { border-color: var(--red); color: var(--red); }
 
+    /* ── Track en cours ── */
+    #current-track {
+      font-size: 0.92rem; font-weight: 500;
+      color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-bottom: 0.75rem;
+      min-height: 1.3em;
+    }
+    #current-track.muted { color: var(--muted); font-weight: 400; }
+
+    /* ── Barre de progression ── */
+    .progress-bar-wrap {
+      display: flex; align-items: center; gap: 0.75rem;
+      margin-bottom: 1.1rem;
+    }
+
+    .progress-bar-track {
+      flex: 1;
+      height: 6px;
+      background: var(--surface2);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    #progress-bar-fill {
+      height: 100%; width: 0%;
+      background: var(--orange);
+      border-radius: 999px;
+      transition: width 0.4s ease;
+    }
+    #progress-bar-fill.done { background: var(--green); }
+    #progress-bar-fill.error { background: var(--red); }
+
+    #progress-counter {
+      font-size: 0.78rem; font-weight: 600;
+      color: var(--muted); white-space: nowrap; min-width: 3.5rem; text-align: right;
+    }
+
+    /* ── Console toggle ── */
+    #console-toggle {
+      display: flex; align-items: center; gap: 0.4rem;
+      background: transparent; border: none;
+      color: var(--muted); font-size: 0.78rem;
+      cursor: pointer; padding: 0; margin-bottom: 0.6rem;
+      transition: color 0.15s;
+    }
+    #console-toggle:hover { color: var(--text); }
+    #console-toggle .arrow {
+      display: inline-block; transition: transform 0.2s;
+      font-style: normal; font-size: 0.7rem;
+    }
+    #console-toggle.open .arrow { transform: rotate(90deg); }
+
     /* ── Log box ── */
+    #log-wrap { display: none; }
+
     #log-box {
       background: #0a0a0a;
       border: 1px solid var(--border);
@@ -215,7 +270,7 @@
       padding: 0.8rem 1rem;
       font-family: "SF Mono", "Fira Mono", ui-monospace, monospace;
       font-size: 0.77rem; line-height: 1.65;
-      max-height: 280px; overflow-y: auto;
+      max-height: 260px; overflow-y: auto;
       color: #bbb; white-space: pre-wrap; word-break: break-all;
     }
     #log-box .l-ok   { color: var(--green); }
@@ -339,14 +394,29 @@
   <!-- Progression -->
   <div class="card" id="progress-card">
     <div class="progress-top">
-      <div>
-        <div class="card-label" style="margin-bottom:0.3rem">Progression</div>
+      <div class="card-label" style="margin-bottom:0">Progression</div>
+      <div style="display:flex;gap:0.5rem;align-items:center">
         <span class="status-pill pending" id="status-label">En attente</span>
+        <button id="cancel-btn">Annuler</button>
       </div>
-      <button id="cancel-btn">Annuler</button>
     </div>
 
-    <div id="log-box">Démarrage…</div>
+    <!-- Track en cours -->
+    <div id="current-track" class="muted">Démarrage…</div>
+
+    <!-- Barre + compteur -->
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-track">
+        <div id="progress-bar-fill"></div>
+      </div>
+      <span id="progress-counter">—</span>
+    </div>
+
+    <!-- Console (cachée par défaut) -->
+    <button id="console-toggle"><span class="arrow">▶</span> Afficher les logs</button>
+    <div id="log-wrap">
+      <div id="log-box"></div>
+    </div>
 
     <button id="zip-btn">📦 Télécharger le ZIP</button>
   </div>
@@ -459,6 +529,9 @@ let pollTimer    = null;
 let logOffset    = 0;
 const POLL_MS    = 800;
 
+// Progression parsée depuis les logs scdl
+const prog = { total: 0, done: 0, failed: 0 };
+
 function setStatus(s) {
   const el = $("status-label");
   el.className = "status-pill " + s;
@@ -470,22 +543,97 @@ function setStatus(s) {
     cancelled: "⛔ Annulé",
   };
   el.textContent = labels[s] || s;
+
+  // Couleur de la barre selon statut final
+  const fill = $("progress-bar-fill");
+  if (s === "done")      { fill.className = "done"; fill.style.width = "100%"; }
+  else if (s === "error" || s === "cancelled") fill.className = "error";
+}
+
+// ── Parsing des logs scdl ────────────────────────────────────────────────
+function parseLine(line) {
+  // Nombre total de tracks dans une playlist
+  // ex : "Downloading 23 tracks" ou "Found 23 tracks"
+  const totalMatch = line.match(/(\d+)\s+tracks?/i);
+  if (totalMatch && !prog.total) {
+    prog.total = parseInt(totalMatch[1], 10);
+  }
+
+  // Track téléchargée avec succès  → "[✔] Nom du son"
+  if (/^\[✔\]/.test(line)) {
+    prog.done++;
+    const name = line.replace(/^\[✔\]\s*/, "").replace(/\.mp3$/i, "").trim();
+    if (name) setCurrentTrack("✔ " + name, false);
+  }
+
+  // Track échouée → "[✘] Nom du son"
+  if (/^\[✘\]/.test(line)) {
+    prog.failed++;
+    prog.done++; // on compte quand même pour la progression
+  }
+
+  // Track en cours de téléchargement → lignes avec "Downloading : Nom"
+  const dlMatch = line.match(/downloading\s*[:\-]\s*(.+)/i);
+  if (dlMatch) {
+    const name = dlMatch[1].replace(/\.mp3$/i, "").trim();
+    setCurrentTrack("⬇ " + name, true);
+  }
+
+  updateProgressBar();
+}
+
+function setCurrentTrack(text, active) {
+  const el = $("current-track");
+  el.textContent = text;
+  el.className = active ? "" : "muted";
+}
+
+function updateProgressBar() {
+  const fill    = $("progress-bar-fill");
+  const counter = $("progress-counter");
+
+  if (!prog.total) {
+    fill.style.width = "0%";
+    counter.textContent = prog.done > 0 ? `${prog.done}` : "—";
+    return;
+  }
+
+  const pct = Math.round((prog.done / prog.total) * 100);
+  fill.style.width = pct + "%";
+  counter.textContent = `${prog.done} / ${prog.total}`;
 }
 
 function appendLogs(lines) {
   const box = $("log-box");
   for (const line of lines) {
+    parseLine(line);
     const s = document.createElement("span");
-    if (/^✅|^\[✔\]/.test(line))           s.className = "l-ok";
-    else if (/^❌|^\[✘\]|error/i.test(line)) s.className = "l-err";
-    else if (/^[▶📁📦⛔⚠]/.test(line))     s.className = "l-info";
+    if (/^\[✔\]/.test(line))                   s.className = "l-ok";
+    else if (/^\[✘\]|error/i.test(line))        s.className = "l-err";
+    else if (/^[▶📁📦⛔⚠✅❌]/.test(line))      s.className = "l-info";
     s.textContent = line + "\n";
     box.appendChild(s);
   }
   box.scrollTop = box.scrollHeight;
 }
 
-function resetLog() { $("log-box").innerHTML = ""; }
+function resetLog() {
+  $("log-box").innerHTML = "";
+  prog.total = 0; prog.done = 0; prog.failed = 0;
+  $("progress-bar-fill").style.width = "0%";
+  $("progress-bar-fill").className   = "";
+  $("progress-counter").textContent  = "—";
+  setCurrentTrack("Démarrage…", false);
+}
+
+// ── Toggle console ───────────────────────────────────────────────────────
+$("console-toggle").addEventListener("click", () => {
+  const btn  = $("console-toggle");
+  const wrap = $("log-wrap");
+  const open = btn.classList.toggle("open");
+  wrap.style.display = open ? "block" : "none";
+  btn.lastChild.textContent = open ? " Masquer les logs" : " Afficher les logs";
+});
 
 // ── Lancer le téléchargement ─────────────────────────────────────────────
 $("dl-btn").addEventListener("click", async () => {
@@ -536,7 +684,12 @@ async function poll() {
     } else {
       resetBtn();
       if (d.status === "done" && d.has_zip) {
+        const label = d.file_count === 1
+          ? "📦 Télécharger le fichier"
+          : `📦 Télécharger le ZIP (${d.file_count} sons)`;
+        $("zip-btn").textContent = label;
         $("zip-btn").style.display = "block";
+        setCurrentTrack(`${d.file_count} son${d.file_count > 1 ? "s" : ""} prêt${d.file_count > 1 ? "s" : ""} !`, false);
       }
     }
   } catch {
